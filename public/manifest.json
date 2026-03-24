@@ -1,7 +1,7 @@
 {
   "name": "智算引擎评估系统",
   "short_name": "智算引擎",
-  "description": "AI算力 TCO & ROI 动态评估系统",
+  "description": "AI算力 TCO 动态评估系统",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

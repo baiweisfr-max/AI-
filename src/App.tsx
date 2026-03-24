@@ -9,7 +9,45 @@ export default function App() {
     const saved = localStorage.getItem('tco_params');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (!parsed.gpuConfigs || parsed.gpuConfigs.length === 0) {
+          parsed.gpuConfigs = DEFAULT_PARAMS.gpuConfigs;
+        } else {
+          parsed.gpuConfigs = parsed.gpuConfigs.map((config: any) => {
+            const model = config.model || GPU_MODELS[0].id;
+            const gpu = GPU_MODELS.find(g => g.id === model) || GPU_MODELS[0];
+            return {
+              ...config,
+              model,
+              count: Number(config.count) || 8,
+              cloudPricePerCard: config.cloudPricePerCard ?? gpu.cloudPricePerMonth,
+              hardwarePricePerCard: config.hardwarePricePerCard ?? (gpu.price / 8)
+            };
+          });
+        }
+        const merged = { ...DEFAULT_PARAMS, ...parsed };
+        
+        // Ensure numeric values are valid numbers
+        const numericKeys: (keyof typeof DEFAULT_PARAMS)[] = [
+          'projectLifespan', 'networkCostTotal', 
+          'storageCostTotal', 'electricityPrice', 'pue', 
+          'cabinetTransformationCost', 'personnelCost', 'wacc'
+        ];
+        
+        numericKeys.forEach(key => {
+          if (typeof merged[key] !== 'number' || isNaN(merged[key] as number)) {
+            (merged as any)[key] = DEFAULT_PARAMS[key];
+          }
+        });
+
+        const booleanKeys: (keyof typeof DEFAULT_PARAMS)[] = ['needNetwork', 'needStorage'];
+        booleanKeys.forEach(key => {
+          if (typeof merged[key] !== 'boolean') {
+            (merged as any)[key] = DEFAULT_PARAMS[key];
+          }
+        });
+        
+        return merged;
       } catch (e) {
         return DEFAULT_PARAMS;
       }
@@ -120,8 +158,6 @@ export default function App() {
       cloudMonthlyBase += config.count * config.cloudPricePerCard;
     });
 
-    if (totalCards === 0) return null;
-
     const networkCost = params.needNetwork ? params.networkCostTotal : 0;
     const storageCost = params.needStorage ? params.storageCostTotal : 0;
     
@@ -190,7 +226,7 @@ export default function App() {
         { name: '机房租赁', value: rentMonthly * params.projectLifespan, fill: '#06b6d4' },
         { name: '人员运维', value: personnelMonthly * params.projectLifespan, fill: '#3b82f6' },
         { name: '维保费用', value: maintenanceAnnual * Math.max(0, (params.projectLifespan - 12) / 12), fill: '#6366f1' },
-      ]
+      ].filter(item => item.value > 0)
     };
   }, [params]);
 
@@ -199,8 +235,11 @@ export default function App() {
     
     const minTco = Math.min(calculation.totalOnPremise, calculation.totalCloud);
     
-    const onPremiseTcoScore = Math.round((minTco / calculation.totalOnPremise) * 90) + 10;
-    const cloudTcoScore = Math.round((minTco / calculation.totalCloud) * 90) + 10;
+    const safeOnPremise = calculation.totalOnPremise > 0 ? calculation.totalOnPremise : 1;
+    const safeCloud = calculation.totalCloud > 0 ? calculation.totalCloud : 1;
+
+    const onPremiseTcoScore = Math.round((minTco / safeOnPremise) * 90) + 10;
+    const cloudTcoScore = Math.round((minTco / safeCloud) * 90) + 10;
 
     const cloudElasticity = 95;
     const onPremiseElasticity = 30;
@@ -237,7 +276,7 @@ export default function App() {
           <div className="bg-indigo-600 p-2 rounded-lg">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-800">智算引擎：AI算力 TCO & ROI 动态评估系统</h1>
+          <h1 className="text-xl font-bold text-slate-800">智算引擎：AI算力 TCO 动态评估系统</h1>
         </div>
         <div className="flex items-center space-x-4">
           <button className="flex items-center space-x-2 text-slate-600 hover:text-indigo-600 transition-colors px-3 py-2 rounded-md hover:bg-slate-100">
@@ -910,7 +949,7 @@ export default function App() {
                           <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                           <div>
                             <span className="font-semibold text-slate-800 block mb-1">按需订阅的轻资产模式 (OPEX)</span>
-                            <p className="text-slate-600 leading-relaxed">资金利用率最大化，无硬件折旧与备件库囤积成本，大幅缩短项目整体 ROI 周期。</p>
+                            <p className="text-slate-600 leading-relaxed">资金利用率最大化，无硬件折旧与备件库囤积成本，大幅缩短项目整体回报周期。</p>
                           </div>
                         </div>
                       </td>

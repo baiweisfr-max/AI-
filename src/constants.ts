@@ -28,7 +28,6 @@ export const DEFAULT_PARAMS = {
       hardwarePricePerCard: 1100000 / 8,
     }
   ] as GpuConfig[],
-  utilizationRate: 80,
   projectLifespan: 36,
   needNetwork: true,
   networkCostTotal: 8 * 1100000 * 0.2, // 8 * 1100000 * 0.2 (IB default)
@@ -38,6 +37,5 @@ export const DEFAULT_PARAMS = {
   pue: 1.4,
   cabinetTransformationCost: 100000,
   personnelCost: 600000,
-  wacc: 5,
-  interestRate: 3
+  wacc: 5
 };
