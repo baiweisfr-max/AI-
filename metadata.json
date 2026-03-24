@@ -1,0 +1,5 @@
+{
+  "name": "AI 安全算力 TCO计算",
+  "description": "A dynamic tool to compare the Total Cost of Ownership (TCO) of building an on-premise AI data center versus using cloud services.",
+  "requestFramePermissions": []
+}
